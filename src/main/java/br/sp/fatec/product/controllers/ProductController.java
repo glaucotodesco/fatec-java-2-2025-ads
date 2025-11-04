@@ -9,14 +9,16 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import br.sp.fatec.product.entities.Product;
-import br.sp.fatec.product.repositories.ProductRepository;
+import br.sp.fatec.product.dtos.ProductRequest;
+import br.sp.fatec.product.dtos.ProductResponse;
 import br.sp.fatec.product.services.ProductService;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("products")
@@ -26,12 +28,12 @@ public class ProductController {
     private ProductService service;
 
     @GetMapping
-    public ResponseEntity<List<Product>> getProducts() {
+    public ResponseEntity<List<ProductResponse>> getProducts() {
         return ResponseEntity.ok(service.getProducts());
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable long id) {
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable long id) {
         return ResponseEntity.ok(service.getProductById(id));
     }
 
@@ -42,18 +44,27 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> saveProduct(@RequestBody Product product) {
+    public ResponseEntity<ProductResponse> saveProduct(@Valid @RequestBody ProductRequest product) {
         
-        Product newProduct = service.saveProduct(product);
+        ProductResponse newProduct = service.saveProduct(product);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(newProduct.getId())
+                .buildAndExpand(newProduct.id())
                 .toUri();
 
         return ResponseEntity.created(location)
                 .body(newProduct);
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<Void> updateProduct( @PathVariable long id,
+                                               @Valid @RequestBody ProductRequest product
+                                              )
+    {
+        service.updateProduct(product, id);
+        return ResponseEntity.noContent().build();
     }
 
 }
